@@ -9,3 +9,6 @@ improvements for version 1.1
 
 ------
 i dont know 
+
+----
+testing the mobile view
