@@ -1,0 +1,53 @@
+name: GitHub Automation
+
+on:
+  issues:
+    types: [closed]
+  pull_request:
+    types: [opened]
+
+jobs:
+  issue-closed:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Comment when issue is closed
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "The issue is now resolved."
+            })
+
+  first-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: write
+    steps:
+      - name: Comment on first pull request
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const user = context.payload.pull_request.user.login;
+
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "all"
+            });
+
+            const userPRs = pulls.filter(pr => pr.user.login === user);
+
+            if (userPRs.length === 1) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: `Congratulations @${user} on your first pull request!`
+              });
+            }
